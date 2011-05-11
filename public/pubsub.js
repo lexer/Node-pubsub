@@ -43,6 +43,14 @@ Pubsub.prototype	= {
 	  this.on("message:"+channel, fn);
 	},
 	
+  psubscribe : function(channel, fn) {
+		this.socket.send({
+		  action : "psubscribe",
+		  pattern : pattern
+		});	
+	  this.on("message:"+channel, fn);
+	},
+	
 	unsubscribe : function(channel, fn) {
 		this.socket.send({
 		  action : "unsubscribe",
