@@ -37,6 +37,9 @@ $(function() {
     client.psubscribe("tro*", function(data){
 	    console.log('Received a message from the server: ' + data);
     });	  
+   client.psubscribe("tr*", function(data){
+	    console.log('Received a message from the server: ' + data);
+    });    
   });  
 
 });

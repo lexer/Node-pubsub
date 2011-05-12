@@ -42,6 +42,7 @@ io.on('connection', function(socket){
   var sub = redis.createClient(); 
 
   socket.on('message', function (msg) { 
+    console.log("fuck");
     if (msg.action === "subscribe") {
       console.log("Subscribe on " + msg.channel);
       sub.subscribe(msg.channel);    
@@ -63,6 +64,7 @@ io.on('connection', function(socket){
   sub.on("message", function (channel, message) {
     console.log(channel +": " + message);
     socket.send({
+      event: "message",
       channel: channel,
       data: message
     });
@@ -71,7 +73,9 @@ io.on('connection', function(socket){
   sub.on("pmessage", function (pattern, channel, message) {
     console.log(pattern + " " + channel +": " + message);
     socket.send({
+      event: "pmessage",
       pattern: pattern,
+      channel: channel,
       data: message
     });
   }); 

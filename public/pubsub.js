@@ -43,12 +43,12 @@ Pubsub.prototype	= {
 	  this.on("message:"+channel, fn);
 	},
 	
-  psubscribe : function(channel, fn) {
+  psubscribe : function(pattern, fn) {
 		this.socket.send({
 		  action : "psubscribe",
 		  pattern : pattern
 		});	
-	  this.on("message:"+channel, fn);
+	  this.on("pmessage:"+pattern, fn);
 	},
 	
 	unsubscribe : function(channel, fn) {
@@ -68,7 +68,12 @@ Pubsub.prototype	= {
   },
   
   onmessage : function(msg) {
-    this.emit("message:"+msg.channel, msg.data);
+    if (msg.event === "message") {    
+      this.emit("message:"+msg.channel, msg.data);
+    } 
+    if (msg.event === "pmessage") {
+      this.emit("pmessage:"+msg.pattern, msg.data);      
+    }
   },
   
   ondisconnect : function() {
