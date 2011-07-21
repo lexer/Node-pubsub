@@ -9,74 +9,61 @@ var sio = require('socket.io');
 var redis = require('redis');
 var express = require('express');  
 var fs = require('fs');
+
+var rtgpath = "redis://witcraft:f45a034960b524b8e3fe94a728a4c5d5@bluegill.redistogo.com:9291/";
+var rtg = require("url").parse(process.env.REDISTOGO_URL || rtgpath);
  
 
 var app = express.createServer();
 
 app.configure(function(){
-    app.use(express.static(__dirname + '/public'));
+  app.use(express.bodyParser());
+  app.use(express.methodOverride());
+  app.use(express.cookieParser());
+  app.use(express.compiler({ src: __dirname + '/public', enable: ['sass'] }));
+  app.use(app.router);
+  app.use(express.static(__dirname + '/public'));		 
 });
 
-app.get('/hello', function(req, res){
-	var pub = redis.createClient(); 
-	
-	pub.publish("trovovo","trov!");
+app.get('/hello', function(req,res) {
+  var pub = redis.createClient(rtg.port, rtg.hostname); 
+  pub.auth(rtg.auth.split(":")[1]);  
+  
+  pub.publish("hello", JSON.stringify({ msg : "it works"}));
 
-  res.send('Hello world message was sent to subscribers');
+  pub.quit();
+  
+  res.send("Hello message sent");
 });
 
-app.get('/hello2', function(req, res){
-	var pub = redis.createClient(); 
-	
-	pub.publish("trololo","hello!");
+var port = process.env.PORT || 3000;
 
-  res.send('Hello world message was sent to subscribers');
+app.listen(port);
+
+var io = sio.listen(app);
+
+io.configure(function () {
+  io.set('transports', ['xhr-multipart', 'xhr-polling', 'jsonp-polling']);
 });
 
+io.sockets.on('connection', function (socket) {
+  var sub = redis.createClient(rtg.port, rtg.hostname); 
+  sub.auth(rtg.auth.split(":")[1]);
 
-app.listen(8000);
+  socket.on('unsubscribe', function (channel) {   
+    sub.unsubscribe(channel); 
+  });
 
-var io = sio.listen(app); 
-
-io.on('connection', function(socket){
-  var sub = redis.createClient(); 
-
-  socket.on('message', function (msg) { 
-    console.log("fuck");
-    if (msg.action === "subscribe") {
-      console.log("Subscribe on " + msg.channel);
-      sub.subscribe(msg.channel);    
-    }
-    if (msg.action === "unsubscribe") {
-      console.log("Unsubscribe from" + msg.channel);      
-      sub.unsubscribe(msg.channel); 
-    }
-    if (msg.action === "psubscribe") {
-      console.log("Subscribe on pattern " + msg.pattern);
-      sub.psubscribe(msg.pattern);    
-    }    
+  socket.on('subscribe', function (channel) {
+    sub.subscribe(channel);
   });
   
   socket.on('disconnect', function () { 
     sub.quit();
   });
 		
-  sub.on("message", function (channel, message) {
-    console.log(channel +": " + message);
-    socket.send({
-      event: "message",
-      channel: channel,
-      data: message
-    });
-  }); 
-  
-  sub.on("pmessage", function (pattern, channel, message) {
-    console.log(pattern + " " + channel +": " + message);
-    socket.send({
-      event: "pmessage",
-      pattern: pattern,
-      channel: channel,
-      data: message
-    });
+  sub.on("message", function (channel, messageStr) {    
+    var message = JSON.parse(messageStr);
+    socket.emit(channel, message);
   }); 
 }); 

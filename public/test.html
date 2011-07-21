@@ -1,0 +1,33 @@
+<html>
+<head>
+<!-- A simple HTML page with jQuery logic to connect to a socket.io instance and receive updates. -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+<script type="text/javascript" src="socket-io.js"></script>
+
+<script type="text/javascript">
+$(function() {	
+	var socket = io.connect();
+
+	socket.on('connect', function () {
+	  socket.emit("subscribe", "hello");
+	});
+
+	var callback = function (data) {
+          console.log(data);	
+  	};
+
+	socket.on('hello', callback);
+
+	socket.on('disconnect', function () {
+	  console.log("disconnected");
+	});
+
+});
+</script>
+</style>
+</head>
+<body>
+<h2>Redis PubSub + Socket.io Test</h2>
+<div id="connect"></div>
+</body>
+</html>

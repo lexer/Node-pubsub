@@ -1,13 +1,12 @@
 {
   "name": "node-pubsub",
-  "description": "Node pub/sub",
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-      "socket.io": "0.x", 
-      "express": "2.x.x",  
-      "hiredis" : "0.1.9",     
-      "redis" : "0.6.x"
+      "socket.io": "0.7.7", 
+      "express": "2.3.11",  
+      "hiredis" : "0.1.12",     
+      "redis" : "0.6.0"
   },
   "engines": { "node": ">= 0.4.7" }
 }
