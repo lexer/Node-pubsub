@@ -10,10 +10,6 @@ var redis = require('redis');
 var express = require('express');  
 var fs = require('fs');
 
-var rtgpath = "redis://witcraft:f45a034960b524b8e3fe94a728a4c5d5@bluegill.redistogo.com:9291/";
-var rtg = require("url").parse(process.env.REDISTOGO_URL || rtgpath);
- 
-
 var app = express.createServer();
 
 app.configure(function(){
@@ -26,7 +22,7 @@ app.configure(function(){
 });
 
 app.get('/hello', function(req,res) {
-  var pub = redis.createClient(rtg.port, rtg.hostname); 
+  var pub = redis.createClient(); 
   pub.auth(rtg.auth.split(":")[1]);  
   
   pub.publish("hello", JSON.stringify({ msg : "it works"}));
