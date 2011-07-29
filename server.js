@@ -44,17 +44,38 @@ var io = sio.listen(app);
 
 io.configure(function () {
   io.set('transports', ['xhr-multipart', 'xhr-polling', 'jsonp-polling']);
+//  io.set('store', new sio.RedisStore(rtg.port, rtg.hostname));
 });
 
+var sub = redis.createClient(rtg.port, rtg.hostname); 
+sub.auth(rtg.auth.split(":")[1]);
+
+var channels = {};
+
+function getChannelSockets(channel) {
+  var sockets = channels[channel]
+  if (sockets === undefined) {
+    sockets = {};
+  }
+  return sockets;
+}
+
+function deleteSocketFromChannel(channel, socketId) {
+  var sockets = getChannelSockets();
+
+  delete sockets[socketId];
+}
+
 io.sockets.on('connection', function (socket) {
-  var sub = redis.createClient(rtg.port, rtg.hostname); 
-  sub.auth(rtg.auth.split(":")[1]);
+  
+  sub
 
   socket.on('unsubscribe', function (channel) {   
     sub.unsubscribe(channel); 
   });
 
   socket.on('subscribe', function (channel) {
+    channels.get
     sub.subscribe(channel);
   });
   
@@ -64,6 +85,11 @@ io.sockets.on('connection', function (socket) {
 		
   sub.on("message", function (channel, messageStr) {    
     var message = JSON.parse(messageStr);
-    socket.emit(channel, message);
+
+    var sockets = getChannelSockets(channel);
+
+    for(var i=0, len = sockets.length; i < len; i++) {
+      sockets[i].emit(channel, message);
+    }
   }); 
 }); 
